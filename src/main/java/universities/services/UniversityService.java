@@ -1,71 +1,45 @@
 package universities.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.stereotype.Service;
 import universities.entities.University;
-import universities.entities.UniversityFull;
 import universities.exceptions.ValidationException;
 import universities.repositories.UniversityRepository;
 
-import java.sql.SQLException;
 import java.util.Collection;
 
-@Component
-@Scope(WebApplicationContext.SCOPE_REQUEST)
+@Service
 public class UniversityService {
 
     public UniversityService(@Autowired UniversityRepository repository) {
         this.repository = repository;
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
-    public UniversityFull add(University university) {
+    public University add(University university) {
         validate(university);
-        try {
-            repository.add(university);
-            return repository.getById(university.getId());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return repository.save(university);
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
     public boolean delete(int id) {
-        try {
-            return repository.delete(id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        boolean exists = repository.existsById(id);
+        if (exists) {
+            repository.deleteById(id);
         }
+        return exists;
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
-    public boolean update(University university) {
+    public University update(University university) {
         validate(university);
-        try {
-            return repository.update(university);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return repository.existsById(university.getId()) ? repository.save(university) : null;
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
-    public UniversityFull getById(int id) {
-        try {
-            return repository.getById(id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    public University getById(int id) {
+        return repository.findById(id).orElse(null);
+
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
     public Collection<University> get() {
-        try {
-            return repository.get();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return repository.findAll();
     }
 
     private static void validate(University university) {

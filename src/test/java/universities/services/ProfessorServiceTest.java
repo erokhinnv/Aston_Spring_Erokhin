@@ -1,7 +1,6 @@
 package universities.services;
 
 import universities.entities.Department;
-import universities.entities.DepartmentFull;
 import universities.entities.Professor;
 import universities.entities.University;
 import universities.exceptions.ValidationException;
@@ -11,13 +10,13 @@ import org.mockito.Mockito;
 import universities.repositories.DepartmentRepository;
 import universities.repositories.ProfessorRepository;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Optional;
 
 class ProfessorServiceTest {
     @Test
-    void testGet() throws SQLException {
+    void testGet() {
         ArrayList<Professor> professors;
         DepartmentRepository departmentRepository;
         ProfessorRepository repository;
@@ -28,26 +27,13 @@ class ProfessorServiceTest {
         professors.add(new Professor());
         departmentRepository = Mockito.mock(DepartmentRepository.class);
         repository = Mockito.mock(ProfessorRepository.class);
-        Mockito.when(repository.get()).thenReturn(professors);
+        Mockito.when(repository.findAll()).thenReturn(professors);
         service = new ProfessorService(repository, departmentRepository);
         Assertions.assertIterableEquals(professors, service.get());
     }
 
     @Test
-    void testErrorGet() throws SQLException {
-        DepartmentRepository departmentRepository;
-        ProfessorRepository repository;
-        ProfessorService service;
-
-        departmentRepository = Mockito.mock(DepartmentRepository.class);
-        repository = Mockito.mock(ProfessorRepository.class);
-        service = new ProfessorService(repository, departmentRepository);
-        Mockito.doThrow(SQLException.class).when(repository).get();
-        Assertions.assertThrows(RuntimeException.class, service::get);
-    }
-
-    @Test
-    void testGetById() throws SQLException {
+    void testGetById() {
         Professor professor;
         Department department;
         University university;
@@ -70,38 +56,24 @@ class ProfessorServiceTest {
         professor.setDegree("PhD in Computer Science");
         birthdate = new Date();
         birthdate.setTime(0);
+        professor.setId(20);
         professor.setBirthday(birthdate);
         professor.setDepartment(department);
         departmentRepository = Mockito.mock(DepartmentRepository.class);
         repository = Mockito.mock(ProfessorRepository.class);
-        Mockito.doReturn(professor).when(repository).getById(professor.getId());
+        Mockito.doReturn(Optional.of(professor)).when(repository).findById(professor.getId());
         service = new ProfessorService(repository, departmentRepository);
         Assertions.assertNull(service.getById(professor.getId() + 1));
         Assertions.assertEquals(professor, service.getById(professor.getId()));
     }
 
     @Test
-    void testErrorGetById() throws SQLException {
-        DepartmentRepository departmentRepository;
-        ProfessorRepository repository;
-        ProfessorService service;
-
-        departmentRepository = Mockito.mock(DepartmentRepository.class);
-        repository = Mockito.mock(ProfessorRepository.class);
-        service = new ProfessorService(repository, departmentRepository);
-        Mockito.doThrow(SQLException.class).when(repository).getById(10);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.getById(10);
-        });
-    }
-
-    @Test
-    void testValidAdd() throws SQLException {
+    void testValidAdd() {
         DepartmentRepository departmentRepository;
         ProfessorRepository repository;
         ProfessorService service;
         Professor professor;
-        DepartmentFull department;
+        Department department;
         University university;
         Date birthdate;
 
@@ -109,7 +81,7 @@ class ProfessorServiceTest {
         university.setId(1);
         university.setName("PSTU");
         university.setCity("Perm");
-        department = new DepartmentFull();
+        department = new Department();
         department.setId(1);
         department.setName("ITAS");
         department.setUniversity(university);
@@ -122,27 +94,27 @@ class ProfessorServiceTest {
         professor.setBirthday(birthdate);
         professor.setDepartment(department);
         departmentRepository = Mockito.mock(DepartmentRepository.class);
-        Mockito.doReturn(department).when(departmentRepository).getById(professor.getDepartment().getId());
+        Mockito.doReturn(true).when(departmentRepository).existsById(department.getId());
         repository = Mockito.mock(ProfessorRepository.class);
         Mockito.doAnswer(invocation -> {
             Professor professorArg;
 
             professorArg = invocation.getArgument(0);
             professorArg.setId(1);
-            return null;
-        }).when(repository).add(professor);
+            return professorArg;
+        }).when(repository).save(professor);
         service = new ProfessorService(repository, departmentRepository);
         service.add(professor);
         Assertions.assertEquals(1, professor.getId());
     }
 
     @Test
-    void testInvalidAdd() throws SQLException {
+    void testInvalidAdd() {
         DepartmentRepository departmentRepository;
         ProfessorRepository repository;
         ProfessorService service;
         Professor professor;
-        DepartmentFull department;
+        Department department;
         University university;
         Date birthdate;
 
@@ -158,7 +130,7 @@ class ProfessorServiceTest {
         university.setId(1);
         university.setName("PSTU");
         university.setCity("Perm");
-        department = new DepartmentFull();
+        department = new Department();
         department.setId(1);
         department.setName("ITAS");
         department.setUniversity(university);
@@ -169,58 +141,19 @@ class ProfessorServiceTest {
         birthdate.setTime(0);
         professor.setBirthday(birthdate);
         professor.setDepartment(department);
-        Mockito.doReturn(department).when(departmentRepository).getById(professor.getDepartment().getId());
+        Mockito.doReturn(true).when(departmentRepository).existsById(department.getId());
         Assertions.assertThrows(ValidationException.class, () -> {
             service.add(professor);
         });
     }
 
     @Test
-    void testErrorAdd() throws SQLException {
+    void testValidUpdate() {
         DepartmentRepository departmentRepository;
         ProfessorRepository repository;
         ProfessorService service;
         Professor professor;
-        DepartmentFull department;
-        University university;
-        Date birthdate;
-
-        departmentRepository = Mockito.mock(DepartmentRepository.class);
-        repository = Mockito.mock(ProfessorRepository.class);
-        service = new ProfessorService(repository, departmentRepository);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.add(null);
-        });
-        university = new University();
-        university.setId(1);
-        university.setName("PSTU");
-        university.setCity("Perm");
-        department = new DepartmentFull();
-        department.setId(1);
-        department.setName("ITAS");
-        department.setUniversity(university);
-        professor = new Professor();
-        professor.setName("Ivan");
-        professor.setPhoneNumber("+79998884334");
-        professor.setDegree("PhD in Computer Science");
-        birthdate = new Date();
-        birthdate.setTime(0);
-        professor.setBirthday(birthdate);
-        professor.setDepartment(department);
-        Mockito.doReturn(department).when(departmentRepository).getById(professor.getDepartment().getId());
-        Mockito.doThrow(SQLException.class).when(repository).add(professor);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.add(professor);
-        });
-    }
-
-    @Test
-    void testValidUpdate() throws SQLException {
-        DepartmentRepository departmentRepository;
-        ProfessorRepository repository;
-        ProfessorService service;
-        Professor professor;
-        DepartmentFull department;
+        Department department;
         University university;
         Date birthdate;
 
@@ -228,7 +161,7 @@ class ProfessorServiceTest {
         university.setId(1);
         university.setName("PSTU");
         university.setCity("Perm");
-        department = new DepartmentFull();
+        department = new Department();
         department.setId(1);
         department.setName("ITAS");
         department.setUniversity(university);
@@ -241,27 +174,34 @@ class ProfessorServiceTest {
         professor.setBirthday(birthdate);
         professor.setDepartment(department);
         departmentRepository = Mockito.mock(DepartmentRepository.class);
-        Mockito.doReturn(department).when(departmentRepository).getById(professor.getDepartment().getId());
+        Mockito.doReturn(true).when(departmentRepository).existsById(department.getId());
         repository = Mockito.mock(ProfessorRepository.class);
         Mockito.doAnswer(invocation -> {
             Professor professorArg;
 
             professorArg = invocation.getArgument(0);
-            professorArg.setId(1);
-            return null;
-        }).when(repository).update(professor);
+            return professorArg;
+        }).when(repository).save(professor);
+        Mockito.doAnswer(invocation -> {
+            Integer idArg;
+
+            idArg = invocation.getArgument(0);
+            return idArg == 100;
+        }).when(repository).existsById(Mockito.anyInt());
         service = new ProfessorService(repository, departmentRepository);
-        service.update(professor);
-        Assertions.assertEquals(1, professor.getId());
+        professor.setId(100);
+        Assertions.assertNotNull(service.update(professor));
+        professor.setId(101);
+        Assertions.assertNull(service.update(professor));
     }
 
     @Test
-    void testInvalidUpdate() throws SQLException {
+    void testInvalidUpdate() {
         DepartmentRepository departmentRepository;
         ProfessorRepository repository;
         ProfessorService service;
         Professor professor;
-        DepartmentFull department;
+        Department department;
         University university;
         Date birthdate;
 
@@ -270,19 +210,17 @@ class ProfessorServiceTest {
         departmentRepository = Mockito.mock(DepartmentRepository.class);
         repository = Mockito.mock(ProfessorRepository.class);
         service = new ProfessorService(repository, departmentRepository);
-        Professor finalProfessor = professor;
         Assertions.assertThrows(ValidationException.class, () -> {
-            service.update(finalProfessor);
+            service.update(professor);
         });
         university = new University();
         university.setId(1);
         university.setName("PSTU");
         university.setCity("Perm");
-        department = new DepartmentFull();
+        department = new Department();
         department.setId(1);
         department.setName("ITAS");
         department.setUniversity(university);
-        professor = new Professor();
         professor.setName(null);
         professor.setPhoneNumber("+79998884334");
         professor.setDegree("PhD in Computer Science");
@@ -290,79 +228,28 @@ class ProfessorServiceTest {
         birthdate.setTime(0);
         professor.setBirthday(birthdate);
         professor.setDepartment(department);
-        Mockito.doReturn(department).when(departmentRepository).getById(professor.getDepartment().getId());
-        Professor finalProfessor1 = professor;
+        Mockito.doReturn(true).when(departmentRepository).existsById(department.getId());
         Assertions.assertThrows(ValidationException.class, () -> {
-            service.update(finalProfessor1);
-        });
-    }
-
-    @Test
-    void testErrorUpdate() throws SQLException {
-        DepartmentRepository departmentRepository;
-        ProfessorRepository repository;
-        ProfessorService service;
-        Professor professor;
-        DepartmentFull department;
-        University university;
-        Date birthdate;
-
-        departmentRepository = Mockito.mock(DepartmentRepository.class);
-        repository = Mockito.mock(ProfessorRepository.class);
-        service = new ProfessorService(repository, departmentRepository);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.update(null);
-        });
-        university = new University();
-        university.setId(1);
-        university.setName("PSTU");
-        university.setCity("Perm");
-        department = new DepartmentFull();
-        department.setId(1);
-        department.setName("ITAS");
-        department.setUniversity(university);
-        professor = new Professor();
-        professor.setName("Ivan");
-        professor.setPhoneNumber("+79998884334");
-        professor.setDegree("PhD in Computer Science");
-        birthdate = new Date();
-        birthdate.setTime(0);
-        professor.setBirthday(birthdate);
-        professor.setDepartment(department);
-        Mockito.doReturn(department).when(departmentRepository).getById(professor.getDepartment().getId());
-        Mockito.doThrow(SQLException.class).when(repository).update(professor);
-        Assertions.assertThrows(RuntimeException.class, () -> {
             service.update(professor);
         });
     }
 
     @Test
-    void testDelete() throws SQLException {
+    void testDelete() {
         DepartmentRepository departmentRepository;
         ProfessorRepository repository;
         ProfessorService service;
 
         departmentRepository = Mockito.mock(DepartmentRepository.class);
         repository = Mockito.mock(ProfessorRepository.class);
-        Mockito.doReturn(true).when(repository).delete(10);
+        Mockito.doAnswer(invocation -> {
+            Integer idArg;
+
+            idArg = invocation.getArgument(0);
+            return idArg == 10;
+        }).when(repository).existsById(Mockito.anyInt());
         service = new ProfessorService(repository, departmentRepository);
         Assertions.assertTrue(service.delete(10));
         Assertions.assertFalse(service.delete(11));
-    }
-
-    @Test
-    void testErrorDelete() throws SQLException {
-        DepartmentRepository departmentRepository;
-        ProfessorRepository repository;
-        ProfessorService service;
-
-        departmentRepository = Mockito.mock(DepartmentRepository.class);
-        repository = Mockito.mock(ProfessorRepository.class);
-        service = new ProfessorService(repository, departmentRepository);
-
-        Mockito.doThrow(SQLException.class).when(repository).delete(10);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.delete(10);
-        });
     }
 }

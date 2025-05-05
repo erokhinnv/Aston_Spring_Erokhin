@@ -1,3 +1,5 @@
+package universities.utils;
+
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletRegistration;
 import org.springframework.web.WebApplicationInitializer;

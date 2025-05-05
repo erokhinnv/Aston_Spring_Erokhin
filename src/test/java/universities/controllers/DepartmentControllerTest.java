@@ -9,7 +9,6 @@ import universities.dto.DepartmentDto;
 import universities.dto.DepartmentFullDto;
 import universities.dto.DepartmentUpdateDto;
 import universities.entities.Department;
-import universities.entities.DepartmentFull;
 import universities.entities.University;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -69,7 +68,7 @@ class DepartmentControllerTest {
     void testGetOne() {
         DepartmentService service;
         DepartmentController controller;
-        DepartmentFull department;
+        Department department;
         University university;
         ResponseEntity<DepartmentFullDto> response;
         String responseJson;
@@ -78,7 +77,7 @@ class DepartmentControllerTest {
         university.setId(1);
         university.setName("PSTU");
         university.setCity("Perm");
-        department = new DepartmentFull();
+        department = new Department();
         department.setId(1);
         department.setName("MEHMAT");
         department.setUniversity(university);
@@ -121,9 +120,9 @@ class DepartmentControllerTest {
         service = Mockito.mock(DepartmentService.class);
         Mockito.doAnswer(invocation -> {
             Department arg;
-            DepartmentFull departmentFull;
+            Department departmentFull;
 
-            departmentFull = new DepartmentFull();
+            departmentFull = new Department();
             arg = invocation.getArgument(0);
             arg.setId(24);
             departmentFull.setId(arg.getId());
@@ -147,17 +146,17 @@ class DepartmentControllerTest {
     void testUpdate() {
         DepartmentService service;
         DepartmentController controller;
-        DepartmentFull department;
+        Department department;
         DepartmentUpdateDto request;
         ResponseEntity<DepartmentFullDto> response;
         String responseJson;
 
-        department = new DepartmentFull();
+        department = new Department();
         department.setId(24);
 
         service = Mockito.mock(DepartmentService.class);
         Mockito.doReturn(department).when(service).getById(department.getId());
-        Mockito.doReturn(true).when(service).update(Mockito.any(Department.class));
+        Mockito.doReturn(department).when(service).update(Mockito.any(Department.class));
 
         request = new DepartmentUpdateDto();
         request.name = Optional.of("MEHMAT");

@@ -160,7 +160,7 @@ class ProfessorControllerTest {
         request.departmentId = 24;
         request.phoneNumber = "+79824863265";
         request.degree = "PhD in Technical Science";
-        request.birthday = new Date(1970, 1, 3);
+        request.birthday = new Date(2*86400000);
 
         controller = new ProfessorController(service, mapper);
         response = controller.post(request);
@@ -183,14 +183,14 @@ class ProfessorControllerTest {
 
         service = Mockito.mock(ProfessorService.class);
         Mockito.doReturn(professor).when(service).getById(professor.getId());
-        Mockito.doReturn(true).when(service).update(Mockito.any(Professor.class));
+        Mockito.doReturn(professor).when(service).update(Mockito.any(Professor.class));
 
         request = new ProfessorUpdateDto();
         request.name = Optional.of("Petr");
         request.departmentId = OptionalInt.of(30);
         request.phoneNumber = Optional.of("+79824863265");
         request.degree = Optional.of("PhD in Technical Science");
-        request.birthday = Optional.of(new Date(1970, 1, 3));
+        request.birthday = Optional.of(new Date(2*86400000));
 
         controller = new ProfessorController(service, mapper);
         response = controller.patch(200, request);

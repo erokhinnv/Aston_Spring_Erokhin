@@ -1,12 +1,9 @@
 package universities.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.web.context.WebApplicationContext;
 import universities.dto.ProfessorCreationDto;
 import universities.dto.ProfessorDto;
 import universities.dto.ProfessorUpdateDto;
-import universities.entities.Department;
 import universities.entities.Professor;
 import jakarta.servlet.http.HttpServlet;
 import org.springframework.http.HttpStatus;
@@ -15,12 +12,10 @@ import org.springframework.web.bind.annotation.*;
 import universities.services.ProfessorService;
 import universities.utils.Mapper;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 @RestController
 @RequestMapping("/professors")
-@Scope(WebApplicationContext.SCOPE_REQUEST)
 public class ProfessorController extends HttpServlet {
     public ProfessorController(@Autowired ProfessorService service, @Autowired Mapper mapper) {
         this.service = service;
@@ -81,7 +76,6 @@ public class ProfessorController extends HttpServlet {
         return result;
     }
 
-    @java.lang.SuppressWarnings("squid:S2789") // Optional может быть null намеренно
     private ProfessorDto updateProfessor(int id, ProfessorUpdateDto updateDto) {
         Professor professor;
         ProfessorDto result;
@@ -90,8 +84,8 @@ public class ProfessorController extends HttpServlet {
         professor = service.getById(id);
         if (professor != null) {
             mapper.toProfessor(updateDto, professor);
-
-            if (service.update(professor)) {
+            professor = service.update(professor);
+            if (professor != null) {
                 result = mapper.toDto(professor);
             }
         }

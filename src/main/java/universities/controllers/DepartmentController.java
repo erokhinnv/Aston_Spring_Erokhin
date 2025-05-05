@@ -2,11 +2,8 @@ package universities.controllers;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.web.context.WebApplicationContext;
 import universities.dto.*;
 import universities.entities.Department;
-import universities.entities.DepartmentFull;
 import jakarta.servlet.http.HttpServlet;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +15,6 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping("/departments")
-@Scope(WebApplicationContext.SCOPE_REQUEST)
 public class DepartmentController extends HttpServlet {
 
     DepartmentController(@Autowired DepartmentService service, @Autowired Mapper mapper) {
@@ -43,7 +39,7 @@ public class DepartmentController extends HttpServlet {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<DepartmentFullDto> patch(@PathVariable int id, @RequestBody DepartmentUpdateDto updateDto) {
+    public ResponseEntity<DepartmentFullDto> patch(@PathVariable int id, @RequestBody DepartmentUpdateDto updateDto)  {
         return ResponseEntity.ofNullable(updateDepartment(id, updateDto));
     }
 
@@ -63,36 +59,34 @@ public class DepartmentController extends HttpServlet {
 
     private DepartmentFullDto getDepartment(int id) {
         DepartmentFullDto result;
-        DepartmentFull department;
+        Department department;
 
         department = service.getById(id);
-        result = mapper.toDto(department);
+        result = mapper.toFullDto(department);
         return result;
     }
 
     private DepartmentFullDto createDepartment(DepartmentCreationDto creationDto) {
         DepartmentFullDto result;
         Department department;
-        DepartmentFull departmentFull;
 
         department = mapper.toDepartment(creationDto);
-        departmentFull = service.add(department);
-        result = mapper.toDto(departmentFull);
+        department = service.add(department);
+        result = mapper.toFullDto(department);
         return result;
     }
 
-    @java.lang.SuppressWarnings("squid:S2789") // Optional может быть null намеренно
     private DepartmentFullDto updateDepartment(int id, DepartmentUpdateDto updateDto) {
-        DepartmentFull department;
+        Department department;
         DepartmentFullDto result;
 
         result = null;
         department = service.getById(id);
         if (department != null) {
             mapper.toDepartment(updateDto, department);
-
-            if (service.update(department)) {
-                result = mapper.toDto(department);
+            department = service.update(department);
+            if (department != null) {
+                result = mapper.toFullDto(department);
             }
         }
         return result;

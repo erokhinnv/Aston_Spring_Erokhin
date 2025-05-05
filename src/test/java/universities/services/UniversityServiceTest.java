@@ -1,19 +1,18 @@
 package universities.services;
 
 import universities.entities.University;
-import universities.entities.UniversityFull;
 import universities.exceptions.ValidationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import universities.repositories.UniversityRepository;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Optional;
 
 class UniversityServiceTest {
     @Test
-    void testGet() throws SQLException {
+    void testGet() {
         ArrayList<University> universities;
         UniversityRepository repository;
         UniversityService service;
@@ -22,54 +21,30 @@ class UniversityServiceTest {
         universities.add(new University());
         universities.add(new University());
         repository = Mockito.mock(UniversityRepository.class);
-        Mockito.when(repository.get()).thenReturn(universities);
+        Mockito.when(repository.findAll()).thenReturn(universities);
         service = new UniversityService(repository);
         Assertions.assertIterableEquals(universities, service.get());
     }
 
     @Test
-    void testErrorGet() throws SQLException {
+    void testGetById() {
+        University university;
         UniversityRepository repository;
         UniversityService service;
 
-        repository = Mockito.mock(UniversityRepository.class);
-        service = new UniversityService(repository);
-        Mockito.doThrow(SQLException.class).when(repository).get();
-        Assertions.assertThrows(RuntimeException.class, service::get);
-    }
-
-    @Test
-    void testGetById() throws SQLException {
-        UniversityFull university;
-        UniversityRepository repository;
-        UniversityService service;
-
-        university = new UniversityFull();
+        university = new University();
         university.setName("PSTU");
         university.setCity("Perm");
         university.setId(1);
         repository = Mockito.mock(UniversityRepository.class);
-        Mockito.doReturn(university).when(repository).getById(university.getId());
+        Mockito.doReturn(Optional.of(university)).when(repository).findById(university.getId());
         service = new UniversityService(repository);
         Assertions.assertNull(service.getById(university.getId() + 1));
         Assertions.assertEquals(university, service.getById(university.getId()));
     }
 
     @Test
-    void testErrorGetById() throws SQLException {
-        UniversityRepository repository;
-        UniversityService service;
-
-        repository = Mockito.mock(UniversityRepository.class);
-        service = new UniversityService(repository);
-        Mockito.doThrow(SQLException.class).when(repository).getById(10);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.getById(10);
-        });
-    }
-
-    @Test
-    void testValidAdd() throws SQLException {
+    void testValidAdd() {
         UniversityRepository repository;
         UniversityService service;
         University university;
@@ -83,10 +58,10 @@ class UniversityServiceTest {
 
             universityArg = invocation.getArgument(0);
             universityArg.setId(1);
-            return null;
-        }).when(repository).add(university);
+            return universityArg;
+        }).when(repository).save(university);
         service = new UniversityService(repository);
-        service.add(university);
+        university = service.add(university);
         Assertions.assertEquals(1, university.getId());
     }
 
@@ -111,27 +86,7 @@ class UniversityServiceTest {
     }
 
     @Test
-    void testErrorAdd() throws SQLException {
-        UniversityRepository repository;
-        UniversityService service;
-        University university;
-
-        repository = Mockito.mock(UniversityRepository.class);
-        service = new UniversityService(repository);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.add(null);
-        });
-        university = new University();
-        university.setCity("Perm");
-        university.setName("PSTU");
-        Mockito.doThrow(SQLException.class).when(repository).add(university);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.add(university);
-        });
-    }
-
-    @Test
-    void testValidUpdate() throws SQLException {
+    void testValidUpdate() {
         UniversityRepository repository;
         UniversityService service;
         University university;
@@ -144,13 +99,19 @@ class UniversityServiceTest {
             University universityArg;
 
             universityArg = invocation.getArgument(0);
-            return universityArg.getId() == 10;
-        }).when(repository).update(university);
+            return universityArg;
+        }).when(repository).save(university);
+        Mockito.doAnswer(invocation -> {
+            Integer idArg;
+
+            idArg = invocation.getArgument(0);
+            return idArg == 10;
+        }).when(repository).existsById(Mockito.anyInt());
         service = new UniversityService(repository);
         university.setId(10);
-        Assertions.assertTrue(service.update(university));
+        Assertions.assertNotNull(service.update(university));
         university.setId(11);
-        Assertions.assertFalse(service.update(university));
+        Assertions.assertNull(service.update(university));
     }
 
     @Test
@@ -174,49 +135,20 @@ class UniversityServiceTest {
     }
 
     @Test
-    void testErrorUpdate() throws SQLException {
-        UniversityRepository repository;
-        UniversityService service;
-        University university;
-
-        repository = Mockito.mock(UniversityRepository.class);
-        service = new UniversityService(repository);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.update(null);
-        });
-        university = new University();
-        university.setCity("Perm");
-        university.setName("PSTU");
-        Mockito.doThrow(SQLException.class).when(repository).update(university);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.update(university);
-        });
-    }
-
-    @Test
-    void testDelete() throws SQLException {
+    void testDelete() {
         UniversityRepository repository;
         UniversityService service;
 
         repository = Mockito.mock(UniversityRepository.class);
-        Mockito.doReturn(true).when(repository).delete(10);
+        Mockito.doAnswer(invocation -> {
+            Integer idArg;
+
+            idArg = invocation.getArgument(0);
+            return idArg == 10;
+        }).when(repository).existsById(Mockito.anyInt());
         service = new UniversityService(repository);
         Assertions.assertTrue(service.delete(10));
         Assertions.assertFalse(service.delete(11));
-    }
-
-    @Test
-    void testErrorDelete() throws SQLException {
-        UniversityRepository repository;
-        UniversityService service;
-
-        repository = Mockito.mock(UniversityRepository.class);
-        service = new UniversityService(repository);
-
-        Mockito.doThrow(SQLException.class).when(repository).delete(10);
-        Assertions.assertThrows(RuntimeException.class, () -> {
-            service.delete(10);
-        });
     }
 
 }

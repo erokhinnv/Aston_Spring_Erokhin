@@ -1,5 +1,10 @@
 package universities.entities;
 
+import jakarta.persistence.*;
+
+import java.util.Collection;
+
+@Entity
 public class University {
 
     public int getId() {
@@ -25,8 +30,21 @@ public class University {
     public void setCity(String city) {
         this.city = city;
     }
+    public Collection<Department> getDepartments() {
+        return departments;
+    }
 
-    private int id;
+    public void setDepartments(Collection<Department> departments) {
+        this.departments = departments;
+    }
+
+    @Id
+    @GeneratedValue
+    private Integer id;
+    @Column(nullable = false)
     private String name;
+    @Column(nullable = false)
     private String city;
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "university")
+    private Collection<Department> departments;
 }

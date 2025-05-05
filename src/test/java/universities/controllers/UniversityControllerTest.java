@@ -10,7 +10,6 @@ import universities.dto.UniversityFullDto;
 import universities.dto.UniversityUpdateDto;
 import universities.entities.Department;
 import universities.entities.University;
-import universities.entities.UniversityFull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -59,14 +58,14 @@ class UniversityControllerTest {
     void testGetOne() {
         UniversityService service;
         UniversityController controller;
-        UniversityFull university;
+        University university;
         Department first, second;
         ArrayList<Department> departments;
         ResponseEntity<UniversityFullDto> response;
         String responseJson;
 
         departments = new ArrayList<>();
-        university = new UniversityFull();
+        university = new University();
         university.setId(1);
         university.setName("PSTU");
         university.setCity("PERM");
@@ -120,9 +119,9 @@ class UniversityControllerTest {
         service = Mockito.mock(UniversityService.class);
         Mockito.doAnswer(invocation -> {
             University arg;
-            UniversityFull universityFull;
+            University universityFull;
 
-            universityFull = new UniversityFull();
+            universityFull = new University();
             arg = invocation.getArgument(0);
             arg.setId(10);
             universityFull.setId(arg.getId());
@@ -147,16 +146,16 @@ class UniversityControllerTest {
         UniversityService service;
         UniversityController controller;
         UniversityUpdateDto request;
-        UniversityFull university;
+        University university;
         ResponseEntity<UniversityFullDto> response;
         String responseJson;
 
-        university = new UniversityFull();
+        university = new University();
         university.setId(12);
 
         service = Mockito.mock(UniversityService.class);
         Mockito.doReturn(university).when(service).getById(university.getId());
-        Mockito.doReturn(true).when(service).update(Mockito.any(University.class));
+        Mockito.doReturn(university).when(service).update(Mockito.any(University.class));
 
         request = new UniversityUpdateDto();
         request.name = Optional.of("SPBSU");

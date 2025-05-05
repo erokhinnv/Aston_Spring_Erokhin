@@ -1,21 +1,16 @@
 package universities.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.stereotype.Service;
 import universities.entities.Department;
-import universities.entities.DepartmentFull;
 import universities.entities.University;
 import universities.exceptions.ValidationException;
 import universities.repositories.DepartmentRepository;
 import universities.repositories.UniversityRepository;
 
-import java.sql.SQLException;
 import java.util.Collection;
 
-@Component
-@Scope(WebApplicationContext.SCOPE_REQUEST)
+@Service
 public class DepartmentService {
 
     public DepartmentService(@Autowired DepartmentRepository repository, @Autowired UniversityRepository universityRepository) {
@@ -23,55 +18,33 @@ public class DepartmentService {
         this.universityRepository = universityRepository;
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
-    public DepartmentFull add(Department department) {
-        try {
-            validate(department);
-            repository.add(department);
-            return repository.getById(department.getId());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    public Department add(Department department) {
+        validate(department);
+        return repository.save(department);
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
     public boolean delete(int id) {
-        try {
-            return repository.delete(id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        boolean exists = repository.existsById(id);
+        if (exists) {
+            repository.deleteById(id);
         }
+        return exists;
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
-    public boolean update(Department department) {
-        try {
-            validate(department);
-            return repository.update(department);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    public Department update(Department department) {
+        validate(department);
+        return repository.existsById(department.getId()) ? repository.save(department) : null;
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
-    public DepartmentFull getById(int id) {
-        try {
-            return repository.getById(id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    public Department getById(int id) {
+        return repository.findById(id).orElse(null);
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
     public Collection<Department> get() {
-        try {
-            return repository.get();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return repository.findAll();
     }
 
-    private void validate(Department department) throws SQLException {
+    private void validate(Department department) {
         University university;
 
         if (department.getName() == null) {
@@ -79,7 +52,7 @@ public class DepartmentService {
         }
 
         university = department.getUniversity();
-        if (university == null || universityRepository.getById(university.getId()) == null) {
+        if (university == null || !universityRepository.existsById(university.getId())) {
             throw new ValidationException("University of department does not exist");
         }
     }

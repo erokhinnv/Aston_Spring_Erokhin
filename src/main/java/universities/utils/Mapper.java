@@ -11,7 +11,7 @@ import java.util.OptionalInt;
 @org.mapstruct.Mapper
 public interface Mapper {
     UniversityDto toDto(University university);
-    UniversityFullDto toDto(UniversityFull universityFull);
+    UniversityFullDto toFullDto(University university);
     @AfterMapping
     default void afterToFullDto(@MappingTarget UniversityFullDto dto) {
         if (dto == null || dto.departments == null) return;
@@ -27,7 +27,7 @@ public interface Mapper {
     Collection<UniversityDto> toUniversityDtos(Collection<University> universities);
 
     DepartmentDto toDto(Department department);
-    DepartmentFullDto toDto(DepartmentFull departmentFull);
+    DepartmentFullDto toFullDto(Department department);
     @AfterMapping
     default void afterToFullDto(@MappingTarget DepartmentFullDto dto) {
         if (dto == null || dto.professors == null) return;

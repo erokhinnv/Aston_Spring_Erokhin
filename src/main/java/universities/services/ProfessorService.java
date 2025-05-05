@@ -1,20 +1,16 @@
 package universities.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.stereotype.Service;
 import universities.entities.Department;
 import universities.entities.Professor;
 import universities.exceptions.ValidationException;
 import universities.repositories.DepartmentRepository;
 import universities.repositories.ProfessorRepository;
 
-import java.sql.SQLException;
 import java.util.Collection;
 
-@Component
-@Scope(WebApplicationContext.SCOPE_REQUEST)
+@Service
 public class ProfessorService {
 
     public ProfessorService(@Autowired ProfessorRepository repository, @Autowired DepartmentRepository departmentRepository) {
@@ -22,55 +18,35 @@ public class ProfessorService {
         this.departmentRepository = departmentRepository;
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
     public Professor add(Professor professor) {
-        try {
-            validate(professor);
-            repository.add(professor);
-            return repository.getById(professor.getId());
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        validate(professor);
+        return repository.save(professor);
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
     public boolean delete(int id) {
-        try {
-            return repository.delete(id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        boolean exists;
+
+        exists = repository.existsById(id);
+        if (exists) {
+            repository.deleteById(id);
         }
+        return exists;
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
-    public boolean update(Professor professor) {
-        try {
-            validate(professor);
-            return repository.update(professor);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+    public Professor update(Professor professor) {
+        validate(professor);
+        return repository.existsById(professor.getId()) ? repository.save(professor) : null;
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
     public Professor getById(int id) {
-        try {
-            return repository.getById(id);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return repository.findById(id).orElse(null);
     }
 
-    @SuppressWarnings("java:S112") // Все необрабатываемые исключения считаем Internal Server Error (500)
     public Collection<Professor> get() {
-        try {
-            return repository.get();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        return repository.findAll();
     }
 
-    private void validate(Professor professor) throws SQLException {
+    private void validate(Professor professor) {
         Department department;
 
         if (professor.getName() == null) {
@@ -87,7 +63,7 @@ public class ProfessorService {
         }
 
         department = professor.getDepartment();
-        if (department == null || departmentRepository.getById(department.getId()) == null) {
+        if (department == null || !departmentRepository.existsById(department.getId())) {
             throw new ValidationException("Department does not exist");
         }
     }

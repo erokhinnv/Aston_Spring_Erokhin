@@ -1,11 +1,8 @@
 package universities.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.web.context.WebApplicationContext;
 import universities.dto.*;
 import universities.entities.University;
-import universities.entities.UniversityFull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +13,6 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping("/universities")
-@Scope(WebApplicationContext.SCOPE_REQUEST)
 public class UniversityController {
 
     public UniversityController(@Autowired UniversityService service, @Autowired Mapper mapper) {
@@ -60,38 +56,37 @@ public class UniversityController {
     }
 
     private UniversityFullDto getUniversity(int id) {
-        UniversityFull university;
+        University university;
         UniversityFullDto result;
 
         university = service.getById(id);
-        result = mapper.toDto(university);
+        result = mapper.toFullDto(university);
         return result;
     }
 
     private UniversityFullDto createUniversity(UniversityCreationDto creationDto) {
         University university;
-        UniversityFull universityFull;
         UniversityFullDto result;
 
         university = mapper.toUniversity(creationDto);
-        universityFull = service.add(university);
-        result = mapper.toDto(universityFull);
+        university = service.add(university);
+        result = mapper.toFullDto(university);
         return result;
     }
 
     private UniversityFullDto updateUniversity(int id, UniversityUpdateDto updateDto) {
-        UniversityFull university;
+        University university;
         UniversityFullDto result;
 
         result = null;
         university = service.getById(id);
         if (university != null) {
             mapper.toUniversity(updateDto, university);
-            if (service.update(university)) {
-                result = mapper.toDto(university);
+            university = service.update(university);
+            if (university != null) {
+                result = mapper.toFullDto(university);
             }
         }
-
         return result;
     }
 
